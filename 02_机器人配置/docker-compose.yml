@@ -1,0 +1,55 @@
+# QQ 机器人：AstrBot + NapCat 一体化
+# 用法（在本目录）：docker compose up -d
+#
+# 国内拉不动镜像时，把 .env 里的 REGISTRY 改成 m.daocloud.io/docker.io/
+# 然后 docker compose pull && docker compose up -d
+
+name: qq-bot
+
+services:
+  astrbot:
+    image: ${REGISTRY:-}soulter/astrbot:latest
+    container_name: astrbot
+    restart: always
+    environment:
+      - TZ=Asia/Shanghai
+      # 想固定管理员密码就取消注释（首次启动不设则日志里随机生成）
+      # - ASTRBOT_ADMIN_PASSWORD=换成你自己的密码
+    ports:
+      # AstrBot 管理面板，只在宿主机本机可访问
+      - "127.0.0.1:6185:6185"
+      - "127.0.0.1:4100:4100"   # 主动消息插件 Web 管理端
+    volumes:
+      - ./data:/AstrBot/data
+    networks:
+      - qqbot
+
+  napcat:
+    image: ${REGISTRY:-}mlikiowa/napcat-docker:latest
+    container_name: napcat
+    restart: "no"   # 风控静置期间禁止自动拉起，恢复时改回 always
+    environment:
+      - TZ=Asia/Shanghai
+      - NAPCAT_UID=${NAPCAT_UID:-1000}
+      - NAPCAT_GID=${NAPCAT_GID:-1000}
+      # MODE=astrbot 会自动创建到 ws://astrbot:6199/ws 的反向 WebSocket，无需手配
+      - MODE=astrbot
+      # NapCat WebUI 登录令牌，务必改掉
+      - WEBUI_TOKEN=${WEBUI_TOKEN:-change-me-please}
+      # 机器人 QQ 号；留空则启动后扫码输入
+      - ACCOUNT=${QQ_ACCOUNT:-}
+    ports:
+      # NapCat WebUI，只绑 127.0.0.1，绝不要暴露到公网
+      - "127.0.0.1:6099:6099"
+      # 6199 只在 docker 内网使用（AstrBot 的 OneBot 服务端），故意不映射到宿主机
+    volumes:
+      - ./napcat/config:/app/napcat/config
+      - ./ntqq:/app/.config/QQ
+    depends_on:
+      - astrbot
+    networks:
+      - qqbot
+
+networks:
+  qqbot:
+    driver: bridge

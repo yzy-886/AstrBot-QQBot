@@ -1,0 +1,25 @@
+# ===== 敏感信息 =====
+deepseek.key
+*.key
+*.pem
+02_机器人配置/.env
+
+# ===== AstrBot 运行时 =====
+02_机器人配置/data/
+02_机器人配置/attachments/
+
+# ===== NapCat 运行时（含 QQ 登录态与 WebUI token）=====
+02_机器人配置/napcat/
+02_机器人配置/ntqq/
+
+# ===== 安装包（数百 MB，不入库）=====
+01_安装包/*.exe
+01_安装包/*.msi
+01_安装包/*.zip
+
+# ===== 日志与临时文件 =====
+03_安装日志/*.log
+*.log
+*.tmp
+qr.png
+qr-big.png
